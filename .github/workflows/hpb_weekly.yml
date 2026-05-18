@@ -1,0 +1,31 @@
+name: HBL 空き率 週次集計
+
+on:
+  schedule:
+    - cron: '0 1 * * 5'   # 毎週金曜 UTC 1:00 = JST 10:00
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: コードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: Playwright ブラウザをインストール
+        run: playwright install chromium --with-deps
+
+      - name: スクレイピング実行 → Sheets書き込み
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: python hpb_sheets.py
